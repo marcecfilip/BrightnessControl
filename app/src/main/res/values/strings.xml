@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Brightness Control</string>
+    <string name="start_overlay">Start Overlay</string>
+    <string name="stop_overlay">Stop Overlay</string>
+    <string name="permission_required">Permissions Required</string>
+    <string name="overlay_permission_text">This app needs permission to display over other apps.</string>
+    <string name="settings_permission_text">This app needs permission to modify system settings.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="brightness">Brightness</string>
+    <string name="brightness_percentage">%d%%</string>
+    <string name="notification_title">Brightness Control Active</string>
+    <string name="notification_text">Overlay is running</string>
+    <string name="notification_channel_name">Overlay Service</string>
+    <string name="notification_channel_description">Keeps the brightness control overlay running</string>
+    <string name="position_controls">Position Controls</string>
+    <string name="reset_position">Reset Position</string>
+    <string name="position_reset">Position reset to default</string>
+    <string name="drag_instruction">Touch and drag the overlay to reposition it</string>
+    <string name="reposition_mode">Reposition Mode</string>
+    <string name="reposition_mode_on">Repositioning enabled - drag overlay to move it</string>
+    <string name="reposition_mode_off">Repositioning disabled</string>
+</resources>

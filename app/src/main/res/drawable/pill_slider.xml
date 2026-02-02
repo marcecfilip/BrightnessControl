@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background Track -->
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/pill_background" />
+            <corners android:radius="100dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/pill_stroke" />
+        </shape>
+    </item>
+    
+    <!-- Progress Fill -->
+    <item android:id="@android:id/progress">
+        <clip
+            android:clipOrientation="horizontal"
+            android:gravity="left">
+            <shape android:shape="rectangle">
+                <gradient
+                    android:angle="90"
+                    android:centerColor="@color/pill_progress_mid"
+                    android:endColor="@color/pill_progress_end"
+                    android:startColor="@color/pill_progress_start"
+                    android:type="linear" />
+                <corners android:radius="100dp" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>
