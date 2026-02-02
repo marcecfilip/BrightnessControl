@@ -206,6 +206,18 @@ class MainActivity : AppCompatActivity() {
         } else {
             "✗ Settings permission required"
         }
+
+        val secureSettingsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
+        binding.secureSettingsStatus.text = if (secureSettingsGranted) {
+            "✓ Direct Extra Dim toggle: Enabled"
+        } else {
+            "✗ Direct Extra Dim toggle: Not Enabled"
+        }
     }
 
     private fun updateToggleButton() {

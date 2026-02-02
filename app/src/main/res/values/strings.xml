@@ -20,4 +20,6 @@
     <string name="reposition_mode">Reposition Mode</string>
     <string name="reposition_mode_on">Repositioning enabled - drag overlay to move it</string>
     <string name="reposition_mode_off">Repositioning disabled</string>
+    <string name="extra_dim">Extra Dim</string>
+    <string name="extra_dim_desc">Toggle Extra Dim feature</string>
 </resources>

@@ -35,10 +35,10 @@ class VerticalBrightnessSlider @JvmOverloads constructor(
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
-        textSize = 18f  // Reduced from 24f
+        textSize = 14f  // Further reduced from 18f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         textAlign = Paint.Align.CENTER
-        setShadowLayer(8f, 0f, 2f, Color.parseColor("#80000000"))
+        setShadowLayer(6f, 0f, 2f, Color.parseColor("#80000000"))
     }
 
     private lateinit var progressGradient: LinearGradient

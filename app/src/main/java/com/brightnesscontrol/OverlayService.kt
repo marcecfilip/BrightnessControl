@@ -11,11 +11,16 @@ import android.os.IBinder
 import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
+import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.database.ContentObserver
+import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 
 class OverlayService : Service() {
@@ -29,7 +34,8 @@ class OverlayService : Service() {
     
     private val hideHandler = Handler(Looper.getMainLooper())
     private var isUserInteracting = false
-    private var isRepositionMode = false  // New: repositioning mode flag
+    private var isRepositionMode = false
+    private var extraDimObserver: ContentObserver? = null
 
     companion object {
         private const val NOTIFICATION_ID = 1
@@ -46,6 +52,25 @@ class OverlayService : Service() {
         brightnessController = BrightnessController(this)
         positionManager = PositionManager(this)
         createNotificationChannel()
+        setupExtraDimObserver()
+    }
+
+    private fun setupExtraDimObserver() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            extraDimObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    if (isOverlayShown) {
+                        val extraDimButton = overlayView.findViewById<com.google.android.material.button.MaterialButton>(R.id.extraDimButton)
+                        updateExtraDimIcon(extraDimButton)
+                    }
+                }
+            }
+            contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor("reduce_bright_colors_activated"),
+                false,
+                extraDimObserver!!
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -86,8 +111,9 @@ class OverlayService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun showOverlay() {
-        // Inflate the overlay layout
-        overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
+        // Inflate the overlay layout with a Material theme context
+        val themedContext = ContextThemeWrapper(this, R.style.Theme_BrightnessControl)
+        overlayView = LayoutInflater.from(themedContext).inflate(R.layout.overlay_layout, null)
 
         // Get screen dimensions
         val displayMetrics = Resources.getSystem().displayMetrics
@@ -106,11 +132,10 @@ class OverlayService : Service() {
 
         // Set up window parameters with explicit dimensions
         val widthPx = (48 * displayMetrics.density).toInt()  // 48dp in pixels
-        val heightPx = (280 * displayMetrics.density).toInt() // 280dp in pixels
         
         params = WindowManager.LayoutParams(
             widthPx,
-            heightPx,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             } else {
@@ -141,6 +166,7 @@ class OverlayService : Service() {
 
     private fun setupOverlayUI() {
         val brightnessSlider = overlayView.findViewById<VerticalBrightnessSlider>(R.id.brightnessSlider)
+        val extraDimButton = overlayView.findViewById<com.google.android.material.button.MaterialButton>(R.id.extraDimButton)
 
         // Initialize brightness
         val currentBrightness = brightnessController.getCurrentBrightness()
@@ -152,6 +178,77 @@ class OverlayService : Service() {
             if (!isRepositionMode) {
                 brightnessController.setBrightness(progress)
                 showOverlayTemporarily()
+            }
+        }
+
+        // Extra Dim toggle logic
+        updateExtraDimIcon(extraDimButton)
+        extraDimButton.setOnClickListener {
+            if (!isRepositionMode) {
+                toggleExtraDim()
+                updateExtraDimIcon(extraDimButton)
+                showOverlayTemporarily()
+            }
+        }
+    }
+
+    private fun updateExtraDimIcon(button: com.google.android.material.button.MaterialButton) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val isExtraDimActive = Settings.Secure.getInt(
+                contentResolver,
+                "reduce_bright_colors_activated",
+                0
+            ) == 1
+            
+            button.alpha = if (isExtraDimActive) 1.0f else 0.4f
+            // Optional: change icon based on state
+            button.setIconResource(if (isExtraDimActive) android.R.drawable.ic_menu_agenda else android.R.drawable.ic_menu_agenda)
+        } else {
+            button.visibility = View.GONE
+        }
+    }
+
+    private fun toggleExtraDim() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val isExtraDimActive = Settings.Secure.getInt(
+                contentResolver,
+                "reduce_bright_colors_activated",
+                0
+            ) == 1
+            
+            val newValue = if (isExtraDimActive) 0 else 1
+
+            try {
+                // Attempt to toggle directly if permission is granted via ADB
+                val success = Settings.Secure.putInt(
+                    contentResolver,
+                    "reduce_bright_colors_activated",
+                    newValue
+                )
+                
+                if (success) {
+                    Toast.makeText(this, if (newValue == 1) "Extra Dim On" else "Extra Dim Off", Toast.LENGTH_SHORT).show()
+                } else {
+                    openExtraDimSettings()
+                }
+            } catch (e: SecurityException) {
+                // Fallback to settings if permission is missing
+                openExtraDimSettings()
+            } catch (e: Exception) {
+                openExtraDimSettings()
+            }
+        }
+    }
+
+    private fun openExtraDimSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                val intent = Intent("android.settings.REDUCE_BRIGHT_COLORS_SETTINGS")
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                Toast.makeText(this, "Opening Extra Dim settings...", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Extra Dim settings not found", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -278,6 +375,9 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        extraDimObserver?.let {
+            contentResolver.unregisterContentObserver(it)
+        }
         if (isOverlayShown) {
             windowManager.removeView(overlayView)
             isOverlayShown = false
