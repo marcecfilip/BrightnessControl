@@ -6,6 +6,11 @@
 ![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
+## 📱 Demo
+<p align="center">
+  <img src="assets/demo.gif" title="App Demo">
+</p>
+
 ## 📖 Overview
 **BrightnessControl** is a native Android utility engineered in **Kotlin** designed to solve a specific hardware limitation: the lack of granular or automated brightness control on specialized tablets and embedded displays. By leveraging system-level overlays, it provides a persistent, low-overhead interface for luminosity management.
 
